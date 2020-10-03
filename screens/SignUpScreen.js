@@ -17,6 +17,8 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import { Value } from 'react-native-reanimated';
 import axios from 'axios';
+import { AsyncStorage } from 'react-native';
+import {storeUsername} from './auth'
 
 
 
@@ -26,31 +28,30 @@ const SignUpScreen = ({navigation}) => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
 
-    const [isSubmit, setIsSubmit] = useState(false)
-
-
-    useEffect(() => {
-        const authenticate = async () => {
-            axios({method: 'post', url: 'https://ab0c000bd4f9.ngrok.io/projectaim/api/regist.php',
-            data: {
-                username: "vito",
-                password: "hello123",
-                email: "vito@vito.com"
+    async function regist(username, password, email){
+        axios({method: 'post',
+        url: 'https://ab0c000bd4f9.ngrok.io/projectaim/api/regist.php',
+        data: {
+            username,
+            password,
+            email
+        }
+        }).then((response) => {
+            if(response.data === 'Username or Email already exists!'){
+                alert('Username or Email already exists!')
+            }else{
+                alert('You are logged in as ' + response.data.name)
+                storeUsername(response.data.name)
+                //navigate to home screen
             }
-            }).then((response) => {
-                alert('You are logged in as' + response.data.username)
-                setIsSubmit(false)
-
-            }).catch((err) => {
-                alert(err)
-            })
-        }
-
-        authenticate()
-        if (isSubmit){
-            authenticate()
-        }
-    }, [isSubmit])
+        }).catch((err) => {
+            if(err.response.status === 404){
+                alert('Username not found!')
+            }else{
+                alert('Error!')
+            }
+        })
+    }
 
     const [data, setData] = React.useState({
         email: '',
@@ -212,7 +213,7 @@ const updateSecureTextEntry = () => {
             </View> */}
             <View style={styles.button}>
                 <TouchableOpacity
-                style={styles.textSign} onPress={() => setIsSubmit(true)}>
+                style={styles.textSign} onPress={() => regist(username, password, email)}>
 
                 <Text style={[styles.textSign, {
                         borderColor:'#ff926b',
@@ -222,7 +223,7 @@ const updateSecureTextEntry = () => {
                     }]}>  Sign Up  </Text>
                 </TouchableOpacity>
                     
-            {/* <TouchableOpacity 
+            <TouchableOpacity 
                 onPress={()=> navigation.navigate('SignInScreen')}
                 style={[styles.signIn,{
                     marginTop: 15
@@ -233,7 +234,7 @@ const updateSecureTextEntry = () => {
                           borderWidth: 2,
                           borderRadius: 10
                     }]}>  Sign In  </Text>
-                </TouchableOpacity> */}
+                </TouchableOpacity>
             </View>
             </Animatable.View>
         </View>

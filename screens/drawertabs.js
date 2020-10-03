@@ -14,6 +14,7 @@ import {
 } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from './context';
+import {getUsername} from './auth'
 
 export function DrawerContent(props) {
    
@@ -33,8 +34,8 @@ export function DrawerContent(props) {
                                 size={50}
                             />
                             <View style={{marginLeft:15, flexDirection:'column'}}>
-                                <Title style={styles.title}>Abiyyuda</Title>
-                                <Caption style={styles.caption}>@abiyyudanp</Caption>
+                                <Title style={styles.title}>{getUsername()}</Title>
+                                <Caption style={styles.caption}>@{getUsername()}</Caption>
                             </View>
                         </View>
 

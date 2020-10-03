@@ -16,11 +16,14 @@ import { useTheme } from '@react-navigation/native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Feather from 'react-native-vector-icons/Feather';
 import { Value } from 'react-native-reanimated';
-
-import {AuthContext} from './context'
+import { AsyncStorage } from 'react-native';
+import axios from 'axios';
+import {storeUsername} from './auth'
 
 const SignInScreen = ({navigation}) => {
     
+    
+
     const [data, setData] = React.useState({
         email: '',
         password: '',
@@ -28,7 +31,6 @@ const SignInScreen = ({navigation}) => {
         secureTextEntry: true,
     });
     
-    const {signIn} = React.useContext (AuthContext);
     const textInputChange= (val) => {
         if(val.length !== 0 ) {
             setData({
@@ -41,32 +43,61 @@ const SignInScreen = ({navigation}) => {
                 ...data,
                 email: val,
                 check_textInputChange: false 
-        });
+            });
+        }
     }
-}
 
-const handlePasswordChange = (val) => {
-    if( val.trim().length >= 8 ) {
+    const handlePasswordChange = (val) => {
+        if( val.trim().length >= 8 ) {
+            setData({
+                ...data,
+                password: val,
+                isValidPassword: true
+            });
+        } else {
+            setData({
+                ...data,
+                password: val,
+                isValidPassword: false
+            });
+        }
+    }
+
+    const updateSecureTextEntry = () => {
         setData({
             ...data,
-            password: val,
-            isValidPassword: true
-        });
-    } else {
-        setData({
-            ...data,
-            password: val,
-            isValidPassword: false
+            secureTextEntry: !data.secureTextEntry
         });
     }
-}
 
-const updateSecureTextEntry = () => {
-    setData({
-        ...data,
-        secureTextEntry: !data.secureTextEntry
-    });
-}
+    const [username, setUsername] = useState("")
+    const [password, setPassword] = useState("")
+
+    async function login(username, password){
+        axios({
+            method: 'post',
+            url: 'https://ab0c000bd4f9.ngrok.io/projectaim/api/login.php',
+            data:{
+                username,
+                password
+            }
+        }).then((response) => {
+            if(!response.data){
+                alert('Login failed')
+            }else{
+                alert('You are logged in as ' + response.data.name)
+                storeUsername(response.data.name)
+                
+                //navigate to home screen
+            }
+        }).catch((err) => {
+            if(err.response.status === 404){
+                alert('Username not found!')
+            }else{
+                alert(err)
+            }
+        })
+    }
 
     return (
         <View style={styles.container}>
@@ -78,7 +109,7 @@ const updateSecureTextEntry = () => {
                 animation="fadeInUpBig"
              style={styles.footer}
             >
-            <Text style={styles.text_footer}>Email</Text>
+            <Text style={styles.text_footer}>Username</Text>
             <View style={styles.action}>
                 <FontAwesome
                     name='user-o'
@@ -86,10 +117,10 @@ const updateSecureTextEntry = () => {
                     size={20}
                     />
                 <TextInput
-                    placeholder="your email"
+                    placeholder="your username"
                     style={styles.textInput}
                     autoCapitalize='none'
-                    onChangeText={(val) => textInputChange(val)}
+                    onChangeText={(val) => setUsername(val)}
                 />
                 {data.check_textInputChange ?
                 <Feather
@@ -111,7 +142,7 @@ const updateSecureTextEntry = () => {
                 secureTextEntry={data.secureTextEntry ? true : false}
                 style={styles.textInput}
                 autoCapitalize='none'
-                onChangeText={(val) => handlePasswordChange(val)}
+                onChangeText={(val) => setPassword(val)}
                 />
                <TouchableOpacity
                 onPress= {updateSecureTextEntry}>
@@ -132,7 +163,7 @@ const updateSecureTextEntry = () => {
             </View>
             <View style={styles.button}>
             <TouchableOpacity 
-                onPress={()=> {signIn()}}
+                onPress={()=> {login(username, password)}}
                 style={[styles.signIn,{
                     marginTop: 15
                 }]}
